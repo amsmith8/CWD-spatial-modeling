@@ -9,13 +9,14 @@ options(java.parameters = "-Xmx4g" ) # Gigs
 ######## ########  Uploaded Packages ######## ########
 
 # data processing
-
+library("dismo")
 library("raster")
+library("rgdal")
 library("tictoc")
 
 
 # Elevation data 
-# elevation <- raster("wc2.1_2.5m_elev.tif")
+elevation <- raster("/Users/amsmith/Documents/WC2_for_deep_learning/wc2.1_2.5m_elev.tif")
 # 
 # # Create new raster opbjects to extract values. 
 # # ***NOTE: terrain function broken in  R ver3.5.2. May need later edition***
@@ -31,11 +32,11 @@ library("tictoc")
 
 
 
+# Create list to call files to make raster stacks
+#topo_list <- list.files(path = "./Raster_files", full.names= TRUE, pattern = ".tif")
+bioclim_list <- list.files(path = "/Users/amsmith/Documents/WC2_for_deep_learning/wc2",full.names= TRUE, pattern = ".tif")
 
 
-# Create list to call files to make raster stacks 
-topo_list <- list.files(path = "./Raster_files", full.names= TRUE, pattern = ".tif")
-bioclim_list <- list.files(path = "./Raster_files/wc2",full.names= TRUE, pattern = ".tif")
 
 # Function 1 - creates stack from list of files
 list_to_stack <- function(tiff.list){
@@ -48,38 +49,72 @@ list_to_stack <- function(tiff.list){
 
 
 # Create stacks
-topo_stack <- list_to_stack(topo_list)
-names(topo_stack) <- c("aspect", "slope", "TRI", "elevation")
+# topo_stack <- list_to_stack(topo_list)
+# names(topo_stack) <- c("aspect", "slope", "TRI", "elevation")
 
 bioclim_stack <- list_to_stack(bioclim_list)
 names(bioclim_stack) <- c( "bio1" , "bio10" , "bio11" , "bio12" , "bio13" , "bio14" , "bio15" , "bio16" , "bio17" , "bio18" , 
                            "bio19" , "bio2" , "bio3" , "bio4" , "bio5" , "bio6 ", "bio7" , "bio8" , "bio9"  )
 
 
-super_stack <- stack(topo_stack,bioclim_stack)
 
 
+#super_stack <- stack(topo_stack,bioclim_stack)
+
+
+
+states <- shapefile("/Users/amsmith/Downloads/ne_110m_admin_1_states_provinces/ne_110m_admin_1_states_provinces.shp") 
+
+plot(states)
+
+library("dplyr")
+contiguous_us <- states[states$name != "Alaska",]  # remove Alaska
+contiguous_us  <- contiguous_us [contiguous_us $name != "Hawaii",]
+
+plot(contiguous_us)
+
+
+aaa <- states[states$name == "Alaska",]
+
+A <- mask(bioclim_stack$bio1, aaa )
+
+plot(A)
+
+
+writeRaster(A , filename=file.path("Predictions/model_ann_folds",names(model_stack_ann)), bylayer=TRUE,format="GTiff")
 
 # NORMILIZATION OF RASTERS
 
 # Function: normalize
 
 # Normalize raster layer
-normalize <- function(x) {
-  min <- raster::minValue(x)
-  max <- raster::maxValue(x)
-  return((x - min) / (max - min))
-}
 
-tic("normalize")
-super_stack <- normalize(super_stack)
-toc()
+# normalize <- function(x) {
+#   min <- raster::minValue(x)
+#   max <- raster::maxValue(x)
+#   return((x - min) / (max - min))
+# }
+# 
+# tic("normalize")
+# super_stack <- normalize(super_stack)
+# toc()
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 # Citations for Data used:
-
-
 
 # Fick, S.E. and R.J. Hijmans, 2017. WorldClim 2: new 1km spatial resolution climate 
 # surfaces for global land areas. International Journal of Climatology 37 (12): 4302-4315.
