@@ -69,7 +69,7 @@ model_extent <- c( -171.7911 , -52.6481 , 25.07992 , 83.23324 )
 plot( alt , ext = model_extent )
 
 # We can know save this area as a new object with crop. 
-study_region_alt <- crop( alt , model.extent )
+study_region_alt <- crop( alt , model_extent )
 
 
 # Save files 
